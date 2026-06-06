@@ -1,0 +1,55 @@
+> [!NOTE]
+> **Customizable Architecture:** These rules serve as a proof-of-concept example for testing local alert pipelines and active response actions. You can modify thresholds, targets, and signature flags to fit your unique infrastructure.
+
+> [!TIP]
+> For enterprise deployment, it is highly recommended to complement these custom logic layers with official rule sets (Community or Subscriber rules) which can be downloaded from [Snort.org](https://www.snort.org/).
+
+
+
+# ICMP Ping to External Host
+alert icmp $HOME_NET any -> $EXTERNAL_NET any (msg:"ICMP Ping to External Host Detected"; sid:1000005; rev:1;)
+
+# ICMP Ping from Laptop to itself
+alert icmp $HOME_NET any -> $HOME_NET any (msg:"ICMP Ping from Laptop to itself Detected"; sid:1000007; rev:1;)
+
+# ICMP Ping from external device to Laptop (incoming)
+alert icmp $EXTERNAL_NET any -> $HOME_NET any (msg:"PING DETECTED from outside"; sid:1000010; rev:1;)
+
+alert icmp $HOME_NET any -> 127.0.0.1 any (msg:"ICMP Loopback Ping Detected"; sid:1000020; rev:1;)
+
+alert icmp any any -> any any (msg:"ICMP Testing rule"; sid:100001; rev:1;)
+
+# General ICMP Echo request (explicit itype)
+alert icmp any any -> any any (msg:"ICMP Ping detected"; itype:8; sid:1000006; rev:1;)
+
+# local.rules — Port-scan and reconnaissance helpers (Windows demo)
+
+# 1) SYN scan heuristic: many SYN packets from same src -> alert
+alert tcp any any -> $HOME_NET any (msg:"LOCAL-DEMO Potential SYN scan"; flags:S; flow:to_server; detection_filter: track by_src, count 20, seconds 60; sid:1000001; rev:1;)
+
+# 2) NULL scan (no flags set)
+alert tcp any any -> $HOME_NET any (msg:"LOCAL-DEMO NULL scan detected"; flags:0; detection_filter: track by_src, count 10, seconds 60; sid:1000008; rev:1;)
+
+# 3) XMAS scan (FIN+PSH+URG)
+alert tcp any any -> $HOME_NET any (msg:"LOCAL-DEMO XMAS scan detected"; flags:FPU; detection_filter: track by_src, count 10, seconds 60; sid:1000003; rev:1;)
+
+# 4) ICMP sweep / ping sweep (ICMP Echo request)
+alert icmp any any -> $HOME_NET any (msg:"LOCAL-DEMO ICMP sweep detected"; itype:8; detection_filter: track by_src, count 20, seconds 60; sid:1000004; rev:1;)
+
+
+# === Local Portscan / Recon Detection Rules ===
+
+# Simple TCP SYN flood / port scan (low threshold)
+alert tcp any any -> $HOME_NET any (msg:"LOCAL Portscan Detected (SYN flood)"; flags:S; detection_filter:track by_src, count 5, seconds 10; sid:2000001; rev:1;)
+
+# NULL scan (no TCP flags set)
+alert tcp any any -> $HOME_NET any (msg:"LOCAL NULL Scan Detected"; flags:0; detection_filter:track by_src, count 3, seconds 10; sid:2000002; rev:1;)
+
+# XMAS scan (FIN + PSH + URG flags set)
+alert tcp any any -> $HOME_NET any (msg:"LOCAL XMAS Scan Detected"; flags:FPU; detection_filter:track by_src, count 3, seconds 10; sid:2000003; rev:1;)
+
+# FIN scan (FIN only)
+alert tcp any any -> $HOME_NET any (msg:"LOCAL FIN Scan Detected"; flags:F; detection_filter:track by_src, count 3, seconds 10; sid:2000004; rev:1;)
+
+alert tcp any any -> $HOME_NET any (msg:"TCP Port Scan Detected"; flags: S; sid:1000002; rev:1;)
+

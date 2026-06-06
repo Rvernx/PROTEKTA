@@ -1,0 +1,12 @@
+# Python Cache
+__pycache__/
+*.pyc
+
+# Logs and Local Data
+*.log
+*.ids
+stakeholder_summary.txt
+ai_stakeholder_report.txt
+
+# Environment Variables (If you ever add API keys)
+.env
